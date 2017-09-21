@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="memo2">
+	<typeAlias alias="memo2DTO" type="memo2.Memo2DTO" />
+
+	<delete id="delete" parameterClass="int">
+		delete from memo2
+		where memono = #memono#
+	</delete>
+
+	<select id="getRefnum" parameterClass="int" resultClass="int">
+		select
+		count(*)
+		from memo2
+		where refnum = #refnum#
+	</select>
+
+	<select id="replyRead" resultClass="memo2DTO" parameterClass="int">
+		select memono,wname,title,grpno,indent,ansnum
+		from memo2
+		where memono =
+		#memono#
+	</select>
+
+	<update id="upAnsnum" parameterClass="Map">
+		update memo2
+		set
+		ansnum =
+		ansnum + 1
+		where grpno = #grpno# and ansnum > #ansnum#
+	</update>
+
+	<update id="replyCreate" parameterClass="memo2DTO">
+		insert into
+		memo2
+		(memono,wname,title,content,wdate,grpno,indent,ansnum,refnum)
+		values(memo2_seq.nextval,#wname#,#title#,#content#,sysdate,#grpno#,#indent#+1,#ansnum#+1,#memono#)
+	</update>
+
+	<update id="update" parameterClass="memo2DTO">
+		update memo2
+		set
+		wname =
+		#wname#,
+		title = #title#,
+		content = #content#
+		where memono = #memono#
+	</update>
+
+	<update id="upviewcnt" parameterClass="int">
+		update memo2
+		set viewcnt =
+		viewcnt + 1
+		where memono = #memono#
+	</update>
+
+	<select id="list" resultClass="memo2DTO" parameterClass="Map">
+
+		SELECT memono,wname, title, wdate, viewcnt,grpno,indent,ansnum,rownum
+		r
+		from(
+
+		SELECT memono,wname, title, wdate,
+		viewcnt,grpno,indent,ansnum,rownum as r
+		from(
+
+		select memono,wname,title,
+		to_char(wdate,'yyyy-mm-dd')
+		wdate,viewcnt,grpno,indent,ansnum
+		from memo2
+
+		<dynamic prepend="where">
+			<isEqual property="col" compareValue="wname">
+				name like '%' || #word#
+				|| '%'
+			</isEqual>
+			<isEqual property="col" compareValue="title">
+				title like '%' || #word#
+				|| '%'
+			</isEqual>
+			<isEqual property="col" compareValue="content">
+				content like '%' ||
+				#word# || '%'
+			</isEqual>
+		</dynamic>
+
+		order by grpno desc,ansnum asc
+		)
+		)
+		
+		<![CDATA[
+		where r >= #sno# and r <= #eno#
+		]]>
+
+	</select>
+
+	<select id="total" parameterClass="Map" resultClass="int">
+		select count(*)
+		from memo2
+		<dynamic prepend="where">
+			<isEqual property="col" compareValue="wname">
+				name like '%' || #word#
+				|| '%'
+			</isEqual>
+			<isEqual property="col" compareValue="title">
+				title like '%' || #word#
+				|| '%'
+			</isEqual>
+			<isEqual property="col" compareValue="content">
+				content like '%' ||
+				#word# || '%'
+			</isEqual>
+		</dynamic>
+
+	</select>
+
+	<select id="read" resultClass="memo2DTO" parameterClass="int">
+		select
+		memono,wname,title,content,
+		to_char(wdate,'yyyy-mm-dd')wdate,viewcnt
+		from memo2
+		where memono = #memono#
+	</select>
+
+	<update id="create" parameterClass="memo2DTO">
+		insert into memo2
+		(memono,wname,title,content,wdate,grpno)
+		values(memo2_seq.nextval,#wname#,#title#,#content#,sysdate,
+		(select
+		nvl(max(grpno),0) + 1 from memo2))
+	</update>
+
+
+</sqlMap>
+

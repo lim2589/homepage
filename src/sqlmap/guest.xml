@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="guest">
+	<typeAlias alias="guestDTO" type="guest.GuestDTO" />
+	
+	<select id="list" resultClass="guestDTO" parameterClass="Map">
+
+		SELECT gno,name, email,comments, wdate,rownum
+		r
+		from(
+
+		SELECT gno,name, email,comments, wdate,rownum as r
+		from(
+
+		select gno,name,email,comments,
+		to_char(wdate,'yyyy-mm-dd')wdate
+		from guest
+
+		<dynamic prepend="where">
+			<isEqual property="col" compareValue="name">
+				name like '%' || #word#
+				|| '%'
+			</isEqual>
+			<isEqual property="col" compareValue="email">
+				email like '%' || #word#
+				|| '%'
+			</isEqual>
+			<isEqual property="col" compareValue="comments">
+				comments like '%' ||
+				#word# || '%'
+			</isEqual>
+		</dynamic>
+
+		order by gno desc
+		)
+		)
+		
+		<![CDATA[
+		where r >= #sno# and r <= #eno#
+		]]>
+
+	</select>
+
+	<select id="total" parameterClass="Map" resultClass="int">
+		select count(*)
+		from guest
+		<dynamic prepend="where">
+			<isEqual property="col" compareValue="name">
+				name like '%' || #word#
+				|| '%'
+			</isEqual>
+			<isEqual property="col" compareValue="email">
+				email like '%' || #word#
+				|| '%'
+			</isEqual>
+			<isEqual property="col" compareValue="comments">
+				comments like '%' ||
+				#word# || '%'
+			</isEqual>
+		</dynamic>
+
+	</select>
+	
+	<select id="read" resultClass="guestDTO" parameterClass="int">
+		select
+		gno,name,email,comments,
+		to_char(wdate,'yyyy-mm-dd')wdate
+		from guest
+		where gno = #gno#
+	</select>
+	
+	<update id="create" parameterClass="guestDTO">
+		insert into guest
+		(gno,name,email,comments,wdate)
+		values(guest_seq.nextval,#name#,#email#,#comments#,sysdate)
+	</update>
+	
+	
+	</sqlMap>
